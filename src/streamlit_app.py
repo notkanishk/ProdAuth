@@ -6,16 +6,20 @@ import qrcode
 import io
 import uuid
 from pyzbar.pyzbar import decode
+from pathlib import Path
 
 # ============= DevEnv =============
 import json
 
 chain = "5777"
-with open('./artifacts/deployments/map.json') as f:
+mapFilePath = Path(__file__).parent /'artifacts/deployments/map.json'
+
+abiFilePath = Path(__file__).parent /'artifacts/deployments/{chain}/{contractAddress}.json'
+with open(mapFilePath) as f:
   data = json.load(f)
 contractAddress = data[chain]["ProdAuth"][0]
 
-with open(f'./artifacts/deployments/{chain}/{contractAddress}.json') as f:
+with open(abiFilePath) as f:
   data = json.load(f)
 abi = data["abi"]
 
