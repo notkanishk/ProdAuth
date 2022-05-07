@@ -14,10 +14,11 @@ import json
 chain = "5777"
 mapFilePath = Path(__file__).parent /'artifacts/deployments/map.json'
 
-abiFilePath = Path(__file__).parent /'artifacts/deployments/{chain}/{contractAddress}.json'
 with open(mapFilePath) as f:
   data = json.load(f)
 contractAddress = data[chain]["ProdAuth"][0]
+
+abiFilePath = Path(__file__).parent /f'artifacts/deployments/{chain}/{contractAddress}.json'
 
 with open(abiFilePath) as f:
   data = json.load(f)
