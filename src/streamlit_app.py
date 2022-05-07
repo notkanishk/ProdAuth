@@ -1,8 +1,6 @@
 from web3 import Web3, exceptions
 import streamlit as st
-import pandas as pd
 from PIL import Image
-import numpy as np
 from streamlit_option_menu import option_menu
 import qrcode
 import io
