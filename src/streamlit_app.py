@@ -1,4 +1,4 @@
-from web3 import Web3, exceptions
+from web3 import Web3
 import streamlit as st
 from PIL import Image
 from streamlit_option_menu import option_menu
@@ -45,14 +45,14 @@ def registerSeller():
     try:
         contract.functions.registerSeller(st.session_state.sellerName).transact({'from': st.session_state.sellerAddress})
         st.success("Seller registered successfully")
-    except exceptions.SolidityError as e:
+    except Exception as e:
         st.error(e)
 
 def registerBuyer():
     try:
         contract.functions.registerOwner(st.session_state.buyerName).transact({'from': st.session_state.buyerAddress})
         st.success("Buyer registered successfully")
-    except exceptions.SolidityError as e:
+    except Exception as e:
         st.error(e)
 
 
@@ -60,7 +60,7 @@ def addProduct(uid):
     try:
         contract.functions.newArticle(str(uid), st.session_state.asin).transact({'from': st.session_state.sellerAddress})
         # st.success("Product added successfully")
-    except exceptions.SolidityError as e:
+    except Exception as e:
         st.error(e)
 
 
@@ -69,7 +69,7 @@ def initSale():
     try:
         contract.functions.initSold(prodId, st.session_state.receiverAddress).transact({'from': st.session_state.sellerAddress})
         st.success("Sale initiated successfully")
-    except exceptions.SolidityError as e:
+    except Exception as e:
         st.error(e)
 
 def verifyProduct():
@@ -77,7 +77,7 @@ def verifyProduct():
     try:
         contract.functions.verifyPurchase(prodId, st.session_state.senderAddress).transact({'from': st.session_state.buyerAddress})
         st.success("Product verified and ownership transferred successfully")
-    except exceptions.SolidityError as e:
+    except Exception as e:
         st.error(e)
 
 
