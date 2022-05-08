@@ -7,11 +7,20 @@ import io
 import uuid
 from pyzbar.pyzbar import decode
 from pathlib import Path
-
-# ============= DevEnv =============
+from dotenv import load_dotenv
+import os
 import json
 
-chain = "5777"
+# ============= DevEnv =============
+
+load_dotenv()
+WEB3_INFURA_API_SECRET = os.getenv("WEB3_INFURA_API_SECRET")
+WEB3_INFURA_PROJECT_ID = os.getenv("WEB3_INFURA_PROJECT_ID")
+
+# chain = "5777"  # Local Blockchain
+
+chain = "3" # Ropsten
+
 mapFilePath = Path(__file__).parent /'artifacts/deployments/map.json'
 
 with open(mapFilePath) as f:
@@ -25,17 +34,18 @@ with open(abiFilePath) as f:
 abi = data["abi"]
 
 
-w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
+w3 = Web3(Web3.HTTPProvider(f'https://:{WEB3_INFURA_API_SECRET}@ropsten.infura.io/v3/{WEB3_INFURA_PROJECT_ID}'))
 
+# st.write(w3.eth.chainId)
 contract = w3.eth.contract(address=contractAddress, abi=abi)
 
 # contract.all_functions()
 # st.write(contract.all_functions())
 
-# item = contract.functions.see("f176c109f74d4766b16410379ddbf5a4").call()
+item = contract.functions.see("f176c109f74d4766b16410379ddbf5a4").call()
 
-# st.write(item)
-# st.session_state
+st.write(item)
+st.session_state
 
 
 
