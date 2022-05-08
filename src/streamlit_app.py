@@ -37,20 +37,7 @@ abi = data["abi"]
 
 w3 = Web3(Web3.HTTPProvider(f'https://:{WEB3_INFURA_API_SECRET}@ropsten.infura.io/v3/{WEB3_INFURA_PROJECT_ID}'))
 
-# st.write(w3.eth.chainId)
 contract = w3.eth.contract(address=contractAddress, abi=abi)
-
-# contract.all_functions()
-# st.write(contract.all_functions())
-
-item = contract.functions.viewItem("7f399ffcea384940019243eb88cf3d32").call()
-seller = contract.functions.viewSeller('0x1Ef951e0cC6A1Bab0ba02e10045Be6E601a33F0B').call()
-
-st.write(item)
-st.write(seller)
-st.session_state
-
-
 
 # ============= Contract Interaction =============
 
@@ -182,6 +169,8 @@ def sellerPage():
     with st.expander("Register as Seller"):
         if not st.session_state.sellerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.sellerPrivateKey:
+            st.error("Please enter your Private Key")
         else:
             st.text_input("Enter your name", key="sellerName")
             if st.button("Register"):
@@ -195,6 +184,8 @@ def sellerPage():
     with st.expander("Add your Product"):
         if not st.session_state.sellerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.sellerPrivateKey:
+            st.error("Please enter your Private Key")
         else:
             st.text_input("Enter your Product ASIN", key="asin")
             if st.button("Add Product"):
@@ -210,6 +201,8 @@ def sellerPage():
     with st.expander("Enter Product ID"):
         if not st.session_state.sellerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.sellerPrivateKey:
+            st.error("Please enter your Private Key")
         elif not st.session_state.receiverAddress:
             st.error("Please enter the Buyer's Account Address")
         else:
@@ -224,6 +217,8 @@ def sellerPage():
     with st.expander("Scan Product QR Code"):
         if not st.session_state.sellerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.sellerPrivateKey:
+            st.error("Please enter your Private Key")
         elif not st.session_state.receiverAddress:
             st.error("Please enter the Buyer's Account Address")
         else:
@@ -238,6 +233,8 @@ def sellerPage():
     with st.expander("Upload Product QR Code"):
         if not st.session_state.sellerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.sellerPrivateKey:
+            st.error("Please enter your Private Key")
         elif not st.session_state.receiverAddress:
             st.error("Please enter the Buyer's Account Address")
         else:
@@ -252,10 +249,13 @@ def sellerPage():
 def buyerPage():
     st.title("Buyer Page")
     st.text_input("Enter your Account Address", key="buyerAddress")
+    st.text_input("Enter your Private Key", key="buyerPrivateKey", type="password")
     st.header("Registration")
     with st.expander("Register as Buyer"):
         if not st.session_state.buyerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.buyerPrivateKey:
+            st.error("Please enter your Private Key")
         else:
             st.text_input("Enter your name", key="buyerName")
             if st.button("Register"):
@@ -271,6 +271,8 @@ def buyerPage():
     with st.expander("Enter Product ID"):
         if not st.session_state.buyerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.buyerPrivateKey:
+            st.error("Please enter your Private Key")
         elif not st.session_state.senderAddress:
             st.error("Please enter the Seller's Account Address")
         else:
@@ -285,6 +287,8 @@ def buyerPage():
     with st.expander("Scan QR Code"):
         if not st.session_state.buyerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.buyerPrivateKey:
+            st.error("Please enter your Private Key")
         elif not st.session_state.senderAddress:
             st.error("Please enter the Seller's Account Address")
         else:
@@ -299,6 +303,8 @@ def buyerPage():
     with st.expander("upload QR Code"):
         if not st.session_state.buyerAddress:
             st.error("Please enter your Account Address")
+        elif not st.session_state.buyerPrivateKey:
+            st.error("Please enter your Private Key")
         elif not st.session_state.senderAddress:
             st.error("Please enter the Seller's Account Address")
         else:
@@ -311,9 +317,12 @@ def buyerPage():
 
 
 def prodPgae():
+    st.header("ProdAuth")
     role = option_menu(
         "Select you Role",
         ["Seller", "Buyer"],
+        icons=["person-plus", "person-check"],
+        menu_icon="person",
         default_index=0,
         orientation="horizontal",
     )
@@ -326,14 +335,37 @@ def prodPgae():
 
 def homePage():
     st.title("Home Page")
-    st.header("Welcome to the Product Marketplace")
-    st.text("This is a demo of the Product Marketplace")
+    st.header("Welcome to ProdAuth!")
+    st.write("The motivation behind this project is to provide a decentralized authentication system for products. Online shopping is at the core of the industry and it is a very popular way to buy products. However, the current system is not secure and is not able to provide the necessary security to protect the authenticity of the products purchased.")
+    st.write("This project provides a platform where the sellers can add their products and the buyers can verify the authenticity of the products. All the products are stored in a decentralized database and the sellers can verify the authenticity of the products by scanning the QR code or uploading the QR code.")
+    st.write("The ownership history of the products is maintained and the ownership is only transfered to the inteded person who verifies the Product ID by scanning the QR code or uploading the QR code.")
+
+
+def infoPage():
+    st.title("Information")
+    st.write("The main application is available on the third tab of the Main Menu.")
+
+    st.header("For Seller:")
+    st.write("1. Register as Seller")
+    st.caption("Using your address and private key, you can register as a Seller.")
+    st.write("2. Add Product")
+    st.caption("Enter the product ASIN. This will add your product using a generated unique ID and give you a QR Code and the generated unique ID. You can engrave or attach this to your product before shipping it to the buyer.")
+    st.write("3. Initiate Sale")
+    st.caption("After the payment has been made and the product is to be shipped. Using the generated unique ID, and the buyer's address, you can initiate the sale mode of the product. This will put the product in _sold_ mode. Only the intended buyer will be able to scan the QR Code and verify the authenticy of the received product and then the ownership of the product will be changed to the buyer.")
+
+    st.header("For Buyer:")
+    st.write("1. Register as Buyer")
+    st.caption("Using your address and private key, you can register as a Buyer.")
+    st.write("2. Verify Product")
+    st.caption("Using the seller's address, you can scan the QR Code or upload the QR Code to verify the authenticity of the product. Upon verification, the ownership of the product will be transferred to the buyer.")
 # ============= Main =================
 
 with st.sidebar:
     page = option_menu(
         "Menu",
-        ["Home", "FAQ", "ProdAuth"],
+        ["Home", "Information", "ProdAuth"],
+        icons=["house", "info-circle", "app"],
+        menu_icon="list",
         default_index=0,
         # orientation="horizontal"
     )
@@ -341,9 +373,8 @@ with st.sidebar:
 
 if page == "Home":
     homePage()
-elif page == "FAQ":
-    st.title("FAQ")
-    st.markdown("Hello world")
+elif page == "Information":
+    infoPage()
 elif page == "ProdAuth":
     prodPgae()
 
