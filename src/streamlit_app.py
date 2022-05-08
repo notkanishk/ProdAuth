@@ -10,6 +10,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import json
+from web3.middleware import construct_sign_and_send_raw_middleware
 
 # ============= DevEnv =============
 
@@ -42,9 +43,11 @@ contract = w3.eth.contract(address=contractAddress, abi=abi)
 # contract.all_functions()
 # st.write(contract.all_functions())
 
-item = contract.functions.see("f176c109f74d4766b16410379ddbf5a4").call()
+item = contract.functions.viewItem("7f399ffcea384940019243eb88cf3d32").call()
+seller = contract.functions.viewSeller('0x1Ef951e0cC6A1Bab0ba02e10045Be6E601a33F0B').call()
 
 st.write(item)
+st.write(seller)
 st.session_state
 
 
@@ -53,23 +56,40 @@ st.session_state
 
 def registerSeller():
     try:
-        contract.functions.registerSeller(st.session_state.sellerName).transact({'from': st.session_state.sellerAddress})
+        sellerAccount = w3.eth.account.from_key(st.session_state.sellerPrivateKey)
+        w3.middleware_onion.add(construct_sign_and_send_raw_middleware(sellerAccount))
+        w3.eth.default_account = sellerAccount.address
+        contract.functions.registerSeller(st.session_state.sellerName).transact({'from': sellerAccount.address})
         st.success("Seller registered successfully")
     except Exception as e:
         st.error(e)
 
 def registerBuyer():
     try:
-        contract.functions.registerOwner(st.session_state.buyerName).transact({'from': st.session_state.buyerAddress})
+        buyerAccount = w3.eth.account.from_key(st.session_state.buyerPrivateKey)
+        w3.middleware_onion.add(construct_sign_and_send_raw_middleware(buyerAccount))
+        w3.eth.default_account = buyerAccount.address
+        contract.functions.registerOwner(st.session_state.buyerName).transact({'from': buyerAccount.address})
         st.success("Buyer registered successfully")
     except Exception as e:
         st.error(e)
 
 
-def addProduct(uid):
+def addProduct(uid, output):
     try:
-        contract.functions.newArticle(str(uid), st.session_state.asin).transact({'from': st.session_state.sellerAddress})
-        # st.success("Product added successfully")
+        sellerAccount = w3.eth.account.from_key(st.session_state.sellerPrivateKey)
+        w3.middleware_onion.add(construct_sign_and_send_raw_middleware(sellerAccount))
+        w3.eth.default_account = sellerAccount.address
+        contract.functions.newArticle(str(uid), st.session_state.asin).transact({'from': sellerAccount.address})
+        st.image(output, width=300)
+        # FIX: Clicking download refreshes state of the page
+        st.download_button(
+            label="Download QR Code",
+            file_name="qr.png",
+            data=output.getvalue(),
+            mime="image/png",
+        )
+        st.success("Product added successfully. Product ID: " + uid)
     except Exception as e:
         st.error(e)
 
@@ -77,7 +97,10 @@ def addProduct(uid):
 def initSale():
     prodId = st.session_state.qrData if 'qrData' in st.session_state else st.session_state.sellerProductId
     try:
-        contract.functions.initSold(prodId, st.session_state.receiverAddress).transact({'from': st.session_state.sellerAddress})
+        sellerAccount = w3.eth.account.from_key(st.session_state.sellerPrivateKey)
+        w3.middleware_onion.add(construct_sign_and_send_raw_middleware(sellerAccount))
+        w3.eth.default_account = sellerAccount.address
+        contract.functions.initSold(prodId, st.session_state.receiverAddress).transact({'from': sellerAccount.address})
         st.success("Sale initiated successfully")
     except Exception as e:
         st.error(e)
@@ -85,7 +108,10 @@ def initSale():
 def verifyProduct():
     prodId = st.session_state.qrData if 'qrData' in st.session_state else st.session_state.buyerProductId
     try:
-        contract.functions.verifyPurchase(prodId, st.session_state.senderAddress).transact({'from': st.session_state.buyerAddress})
+        buyerAccount = w3.eth.account.from_key(st.session_state.buyerPrivateKey)
+        w3.middleware_onion.add(construct_sign_and_send_raw_middleware(buyerAccount))
+        w3.eth.default_account = buyerAccount.address
+        contract.functions.verifyPurchase(prodId, st.session_state.senderAddress).transact({'from': buyerAccount.address})
         st.success("Product verified and ownership transferred successfully")
     except Exception as e:
         st.error(e)
@@ -99,8 +125,6 @@ def idGen():
     asin = asin.encode().hex()
     uid = str(hex(int(uid, 16) + int(asin, 16))[2:])
     qrGen(uid)
-    st.success("Product added successfully. Product ID: " + uid)
-    addProduct(uid)
 
 
 #  ============= QR Code Handling =============
@@ -116,14 +140,8 @@ def qrGen(uid):
     img = qr.make_image(fill_color="black", back_color="white")
     output = io.BytesIO()
     img.save(output, format="PNG")
-    st.image(output, width=300)
-    # FIX: Clicking download refreshes state of the page
-    st.download_button(
-        label="Download QR Code",
-        file_name="qr.png",
-        data=output.getvalue(),
-        mime="image/png",
-    )
+    addProduct(uid, output)
+
 
 
 def readQr(img):
@@ -159,6 +177,7 @@ def expUploadQR():
 def sellerPage():
     st.title("Seller Page")
     st.text_input("Enter your Account Address", key="sellerAddress")
+    st.text_input("Enter your Private Key", key="sellerPrivateKey", type="password")
     st.header("Registration")
     with st.expander("Register as Seller"):
         if not st.session_state.sellerAddress:

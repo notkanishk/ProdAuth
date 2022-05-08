@@ -34,7 +34,7 @@ contract ProdAuth {
     mapping (address => Seller) sellersList;
 
     function registerSeller(string memory name) public payable {
-        address addr = msg.sender;
+        address addr = tx.origin;
         require (sellersList[addr].exists == false, "Seller already exists");
         Seller memory newSeller;
         newSeller.name = name;
@@ -43,7 +43,7 @@ contract ProdAuth {
     }
 
     function registerOwner(string memory name) public payable {
-        address addr = msg.sender;
+        address addr = tx.origin;
         require (ownersList[addr].exists == false, "Owner already exists");
         Owner memory newOwner;
         newOwner.name = name;
@@ -52,10 +52,10 @@ contract ProdAuth {
     }
 
     function newArticle(string memory itemId, string memory asin) public payable {
-        address sellerId = msg.sender;
+        address sellerId = tx.origin;
         require (sellersList[sellerId].exists == true, "Please register as a seller first!");
         require (articlesList[itemId].exists == false, "Article already exists!");
-        ownersG.push(msg.sender);
+        ownersG.push(tx.origin);
         Article memory newItem;
         newItem.asin = asin;
         newItem.owners = ownersG;
@@ -69,7 +69,7 @@ contract ProdAuth {
     }
 
     function initSold(string memory itemId, address buyerId) public payable {
-        address sellerId = msg.sender;
+        address sellerId = tx.origin;
         require (sellersList[sellerId].exists == true, "Please register as a seller first!");
         require (ownersList[buyerId].exists == true, "Buyer not registered!");
         require (articlesList[itemId].exists == true, "Article not found!");
@@ -101,7 +101,7 @@ contract ProdAuth {
     }
 
     function verifyPurchase(string memory itemId, address sellerId) public payable returns (Article memory){
-        address buyerId = msg.sender;
+        address buyerId = tx.origin;
         require (ownersList[buyerId].exists == true, "Buyer not registered!");
         require (sellersList[sellerId].exists == true, "Seller not registered!");
         require (articlesList[itemId].exists == true, "Article not found!");
@@ -112,7 +112,11 @@ contract ProdAuth {
         return articlesList[itemId];
     }
 
-    function see(string memory itemId) public view returns (Article memory){
+    function viewItem(string memory itemId) public view returns (Article memory){
         return articlesList[itemId];
+    }
+
+    function viewSeller(address sellerId) public view returns (Seller memory){
+        return sellersList[sellerId];
     }
 }
